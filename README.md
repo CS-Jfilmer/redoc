@@ -1,3 +1,8 @@
+## Redoc - CS Fork
+Adds
+- Callbacks from https://github.com/Makashov/ReDoc
+- Displays the schema description above the request or response schema (very useful for oneOf where you can explain the differences)
+
 <div align="center">
   <img alt="ReDoc logo" src="https://raw.githubusercontent.com/Redocly/redoc/master/docs/images/redoc-logo.png" width="400px" />
 
@@ -57,7 +62,7 @@ Additionally, all the 1.x releases are hosted on our GitHub Pages-based CDN **(d
 
 ## Version Guidance
 | ReDoc Release | OpenAPI Specification |
-|:--------------|:----------------------|
+| :------------ | :-------------------- |
 | 2.0.0-alpha.x | 3.0, 2.0              |
 | 1.19.x        | 2.0                   |
 | 1.18.x        | 2.0                   |
