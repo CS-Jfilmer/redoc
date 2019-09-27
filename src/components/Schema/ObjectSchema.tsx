@@ -42,6 +42,8 @@ export class ObjectSchema extends React.Component<ObjectSchemaProps> {
       : fields;
 
     return (
+      <div>
+      <p>{this.props.schema.description}</p>
       <PropertiesTable>
         {showTitle && <PropertiesTableCaption>{this.props.schema.title}</PropertiesTableCaption>}
         <tbody>
@@ -72,6 +74,7 @@ export class ObjectSchema extends React.Component<ObjectSchemaProps> {
           })}
         </tbody>
       </PropertiesTable>
+      </div>
     );
   }
 }

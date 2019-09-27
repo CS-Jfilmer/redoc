@@ -1,4 +1,4 @@
-import memoize from 'memoize-one';
+// import memoize from 'memoize-one';
 import { Component, createContext } from 'react';
 
 import { AppStore } from '../services/';
@@ -47,7 +47,7 @@ export class StoreBuilder extends Component<StoreBuilderProps, StoreBuilderState
     resolvedSpec: null,
   };
 
-  @memoize
+  // @memoize
   makeStore(spec, specUrl, options) {
     if (!spec) {
       return undefined;
