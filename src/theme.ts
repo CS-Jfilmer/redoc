@@ -20,13 +20,13 @@ const defaultTheme: ThemeInterface = {
       contrastText: ({ colors }) => readableColor(colors.primary.main),
     },
     success: {
-      main: '#00aa13',
-      light: ({ colors }) => lighten(colors.tonalOffset, colors.success.main),
+      main: '#37d247',
+      light: ({ colors }) => lighten(colors.tonalOffset * 2, colors.success.main),
       dark: ({ colors }) => darken(colors.tonalOffset, colors.success.main),
       contrastText: ({ colors }) => readableColor(colors.success.main),
     },
     warning: {
-      main: '#d4ad03',
+      main: '#ffa500',
       light: ({ colors }) => lighten(colors.tonalOffset, colors.warning.main),
       dark: ({ colors }) => darken(colors.tonalOffset, colors.warning.main),
       contrastText: '#ffffff',
@@ -55,7 +55,7 @@ const defaultTheme: ThemeInterface = {
         backgroundColor: ({ colors }) => transparentize(0.9, colors.error.main),
       },
       redirect: {
-        color: '#ffa500',
+        color: ({ colors }) => colors.warning.main,
         backgroundColor: ({ colors }) => transparentize(0.9, colors.responses.redirect.color),
       },
       info: {
@@ -122,10 +122,14 @@ const defaultTheme: ThemeInterface = {
       hover: ({ typography }) => lighten(0.2, typography.links.color),
     },
   },
-  menu: {
+  sidebar: {
     width: '260px',
     backgroundColor: '#fafafa',
     textColor: '#333333',
+    activeTextColor: theme =>
+      theme.sidebar.textColor !== defaultTheme.sidebar!.textColor
+        ? theme.sidebar.textColor
+        : theme.colors.primary.main,
     groupItems: {
       textTransform: 'uppercase',
     },
@@ -134,12 +138,12 @@ const defaultTheme: ThemeInterface = {
     },
     arrow: {
       size: '1.5em',
-      color: theme => theme.menu.textColor,
+      color: theme => theme.sidebar.textColor,
     },
   },
   logo: {
-    maxHeight: ({ menu }) => menu.width,
-    maxWidth: ({ menu }) => menu.width,
+    maxHeight: ({ sidebar: menu }) => menu.width,
+    maxWidth: ({ sidebar: menu }) => menu.width,
     gutter: '2px',
   },
   rightPanel: {
@@ -147,7 +151,7 @@ const defaultTheme: ThemeInterface = {
     width: '40%',
     textColor: '#ffffff',
   },
-  codeSample: {
+  codeBlock: {
     backgroundColor: ({ rightPanel }) => darken(0.1, rightPanel.backgroundColor),
   },
 };
@@ -292,10 +296,11 @@ export interface ResolvedThemeInterface {
       hover: string;
     };
   };
-  menu: {
+  sidebar: {
     width: string;
     backgroundColor: string;
     textColor: string;
+    activeTextColor: string;
     groupItems: {
       textTransform: string;
     };
@@ -317,7 +322,7 @@ export interface ResolvedThemeInterface {
     textColor: string;
     width: string;
   };
-  codeSample: {
+  codeBlock: {
     backgroundColor: string;
   };
 

@@ -14,7 +14,14 @@ import * as zlib from 'zlib';
 import { createStore, loadAndBundleSpec, Redoc } from 'redoc';
 
 import { watch } from 'chokidar';
-import { createReadStream, existsSync, readFileSync, ReadStream, writeFileSync } from 'fs';
+import {
+  createReadStream,
+  existsSync,
+  lstatSync,
+  readFileSync,
+  ReadStream,
+  writeFileSync,
+} from 'fs';
 import * as mkdirp from 'mkdirp';
 
 import * as YargsParser from 'yargs';
@@ -69,8 +76,10 @@ YargsParser.command(
       watch: argv.watch as boolean,
       templateFileName: argv.template as string,
       templateOptions: argv.templateOptions || {},
-      redocOptions: argv.options || {},
+      redocOptions: getObjectOrJSON(argv.options),
     };
+
+    console.log(config);
 
     try {
       await serve(argv.port as number, argv.spec as string, config);
@@ -97,7 +106,6 @@ YargsParser.command(
       yargs.options('title', {
         describe: 'Page Title',
         type: 'string',
-        default: 'ReDoc documentation',
       });
 
       yargs.options('disableGoogleFont', {
@@ -115,8 +123,8 @@ YargsParser.command(
       yargs.demandOption('spec');
       return yargs;
     },
-    async argv => {
-      const config: Options = {
+    async (argv: any) => {
+      const config = {
         ssr: true,
         output: argv.o as string,
         cdn: argv.cdn as boolean,
@@ -124,7 +132,7 @@ YargsParser.command(
         disableGoogleFont: argv.disableGoogleFont as boolean,
         templateFileName: argv.template as string,
         templateOptions: argv.templateOptions || {},
-        redocOptions: argv.options || {},
+        redocOptions: getObjectOrJSON(argv.options),
       };
 
       try {
@@ -188,21 +196,34 @@ async function serve(port: number, pathToSpec: string, options: Options = {}) {
   if (options.watch && existsSync(pathToSpec)) {
     const pathToSpecDirectory = resolve(dirname(pathToSpec));
     const watchOptions = {
-      ignored: /(^|[\/\\])\../,
+      ignored: [/(^|[\/\\])\../, /___jb_[a-z]+___$/],
+      ignoreInitial: true,
     };
 
     const watcher = watch(pathToSpecDirectory, watchOptions);
     const log = console.log.bind(console);
+
+    const handlePath = async _path => {
+      try {
+        spec = await loadAndBundleSpec(pathToSpec);
+        pageHTML = await getPageHTML(spec, pathToSpec, options);
+        log('Updated successfully');
+      } catch (e) {
+        console.error('Error while updating: ', e.message);
+      }
+    };
+
     watcher
       .on('change', async path => {
         log(`${path} changed, updating docs`);
-        try {
-          spec = await loadAndBundleSpec(pathToSpec);
-          pageHTML = await getPageHTML(spec, pathToSpec, options);
-          log('Updated successfully');
-        } catch (e) {
-          console.error('Error while updating: ', e.message);
-        }
+        handlePath(path);
+      })
+      .on('add', async path => {
+        log(`File ${path} added, updating docs`);
+        handlePath(path);
+      })
+      .on('addDir', path => {
+        log(`↗  Directory ${path} added. Files in here will trigger reload.`);
       })
       .on('error', error => console.error(`Watcher error: ${error}`))
       .on('ready', () => log(`👀  Watching ${pathToSpecDirectory} for changes...`));
@@ -276,7 +297,7 @@ async function getPageHTML(
           ? '<script src="https://unpkg.com/redoc@next/bundles/redoc.standalone.js"></script>'
           : `<script>${redocStandaloneSrc}</script>`) + css
       : '<script src="redoc.standalone.js"></script>',
-    title,
+    title: title || spec.info.title || 'ReDoc documentation',
     disableGoogleFont,
     templateOptions,
   });
@@ -339,4 +360,26 @@ function escapeUnicode(str) {
 function handleError(error: Error) {
   console.error(error.stack);
   process.exit(1);
+}
+
+function getObjectOrJSON(options) {
+  switch (typeof options) {
+    case 'object':
+      return options;
+    case 'string':
+      try {
+        if (existsSync(options) && lstatSync(options).isFile()) {
+          return JSON.parse(readFileSync(options, 'utf-8'));
+        } else {
+          return JSON.parse(options);
+        }
+      } catch (e) {
+        console.log(
+          `Encountered error:\n\n${options}\n\nis neither a file with a valid JSON object neither a stringified JSON object.`,
+        );
+        handleError(e);
+      }
+    default:
+      return {};
+  }
 }
